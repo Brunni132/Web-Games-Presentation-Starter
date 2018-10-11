@@ -1,0 +1,92 @@
+<html>
+<head>
+  <script src="https://pixijs.download/release/pixi.min.js"></script>
+</head>
+<body>
+  <script>
+    // Create app
+    var width = 640, height = 360;
+    var app = new PIXI.Application(width, height);
+    document.body.appendChild(app.view);
+
+    var resources = PIXI.loader.resources;
+    var gameScene;
+    var ball, cat, scoreText;
+    var score = 0, remainingTime = 5000;
+    var lastTime;
+
+    PIXI.loader
+      .add("ball.png")
+      .add("cat.png")
+      .load(setup);
+
+    function setup() {
+      gameScene = new PIXI.Container();
+      app.stage.addChild(gameScene);
+
+      cat = new PIXI.Sprite(resources["cat.png"].texture);
+      cat.anchor.set(0.5, 0.5);
+      gameScene.addChild(cat);
+
+      makeBall();
+
+      scoreText = new PIXI.Text("");
+      scoreText.style = { fill: "white", font: "24px Arial"};
+      gameScene.addChild(scoreText);
+
+      timeText = new PIXI.Text("");
+      timeText.style = { fill: "white", font: "24px Arial"};
+      timeText.y = 24;
+      gameScene.addChild(timeText);
+
+      app.stage.interactive = true;
+      app.stage.mousemove = moveHandler;
+
+      // Start the game loop
+      update();
+    }
+
+    function update(currentTime) {
+      if (remainingTime === 0) {
+        return;
+      }
+
+      if (overlaps(cat, ball)) {
+        gameScene.removeChild(ball);
+        makeBall();
+        score += 1;
+      }
+
+      var deltaTime = 0;
+      if (lastTime) {
+        deltaTime = currentTime - lastTime;
+      }
+      lastTime = currentTime;
+      remainingTime = Math.max(0, remainingTime - deltaTime);
+
+      // Update UI
+      scoreText.text = "Score: " + score;
+      timeText.text = "Time: " + Math.ceil(remainingTime / 1000);
+      requestAnimationFrame(update);
+    }
+
+    function makeBall() {
+      ball = new PIXI.Sprite(resources["ball.png"].texture);
+      ball.anchor.set(0.5, 0.5);
+      ball.x = Math.random() * (width - ball.width / 2) + ball.width / 2;
+      ball.y = Math.random() * (height - ball.height / 2) + ball.height / 2;
+      gameScene.addChild(ball);
+    }
+
+    function moveHandler(event) {
+        cat.x = event.data.global.x;
+        cat.y = event.data.global.y;
+    }
+
+    function overlaps(sprite1, sprite2) {
+      var distance = Math.sqrt(Math.pow(sprite2.x - sprite1.x, 2) + Math.pow(sprite2.y - sprite1.y, 2));
+      return distance < 20;
+    }
+    </script>
+  </body>
+</html>
